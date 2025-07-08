@@ -1,0 +1,10 @@
+{
+  "context": {},
+  "payload": {
+    "endpoint": "/files",
+    "method": "POST",
+    "request_schema": "{}",
+    "response_schema": "{}"
+  },
+  "tool_calls": []
+}

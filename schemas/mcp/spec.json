@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SpecEnvelope",
+  "allOf": [
+    { "$ref": "./envelope.json" }
+  ],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "properties": {
+        "endpoint": {"type": "string"},
+        "method": {"type": "string"},
+        "request_schema": {"type": "string"},
+        "response_schema": {"type": "string"}
+      },
+      "required": ["endpoint", "method", "request_schema", "response_schema"]
+    }
+  }
+}
