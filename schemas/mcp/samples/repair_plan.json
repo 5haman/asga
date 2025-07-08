@@ -1,0 +1,5 @@
+{
+  "context": {},
+  "payload": {"steps": ["edit file", "run tests"]},
+  "tool_calls": []
+}
