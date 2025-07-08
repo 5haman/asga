@@ -215,5 +215,35 @@ changes bump **MAJOR**.
 
 ## 14 · Security
 
-* Bandit and Semgrep executed in pipeline.  
-* Dependencies scanned with `pip‑audit`.  
+* Bandit and Semgrep executed in pipeline.  * Dependencies scanned with `pip‑audit`.  
+## 15 · LangGraph Main Cycle
+
+```mermaid
+graph TD
+  subgraph Main cycle
+    A[clone/pull] --> B[analyse]
+    B --> C[collect product signals]
+    C --> D[plan changes]
+    D -->|refactor| E[generate patch]
+    D -->|feature|  F[generate feature code]
+    E --> G[apply & test]
+    F --> G
+    G --> H[LLM+MCP review]
+    H -->|accept| I[create PR]
+    H -->|reject| J[optimise SIMBA]
+  end
+```
+
+| Step | LangGraph node | Primary libs / actions |
+|------|---------------|-----------------------|
+| clone/pull | helper `git_clone_or_pull()` | GitPython clone or pull |
+| analyse | `analyse` | pylint, lizard, complexity snapshot |
+| collect product signals | `collect_signals` | codemetrics, GitHub GraphQL |
+| plan changes | `plan_changes` | markdown plan with `refactor:` and `feature:` tags |
+| generate patch | `gen_patch` (conditional) | diff patch generation |
+| generate feature code | `gen_feature` (conditional) | spec→tests→impl loop |
+| apply & test | `apply_test` | run tests and record bool |
+| LLM+MCP review | `review` | security/style critique to MCP |
+| create PR | `create_pr` | GitHub REST v3 |
+| optimise SIMBA | `optimise_simba` | internal optimisation |
+

@@ -70,5 +70,34 @@ _All five are implemented as **LangGraph nodes**; the graph’s **Supervisor** h
 ## 7 Glossary
 
 * **MCP** – Model Context Protocol, standardising context/tool packets.  
-* **StateGraph** – typed DAG in LangGraph managing stateful agent execution.  
-* **Supervisor** – routing LLM node that decides next agent.
+* **StateGraph** – typed DAG in LangGraph managing stateful agent execution.  * **Supervisor** – routing LLM node that decides next agent.
+## 8 Main Cycle
+
+```mermaid
+graph TD
+  subgraph Main cycle
+    A[clone/pull] --> B[analyse]
+    B --> C[collect product signals]
+    C --> D[plan changes]
+    D -->|refactor| E[generate patch]
+    D -->|feature|  F[generate feature code]
+    E --> G[apply & test]
+    F --> G
+    G --> H[LLM+MCP review]
+    H -->|accept| I[create PR]
+    H -->|reject| J[optimise SIMBA]
+  end
+```
+
+**LangGraph nodes & actions**
+- **clone / pull** – helper `git_clone_or_pull()` using GitPython.
+- **analyse** – run `pylint` and `lizard`, capture complexity snapshot.
+- **collect_signals** – gather churn, heat-map and open issues via codemetrics & GitHub GraphQL.
+- **plan_changes** – LLM emits markdown plan with `refactor:` / `feature:` tags.
+- **gen_patch** – diff-based patch generation.
+- **gen_feature** – iterative spec→tests→impl cycle.
+- **apply_test** – apply patches then run `pytest` in a venv.
+- **review** – LLM critique published to MCP.
+- **create_pr** – open GitHub PR via REST v3.
+- **optimise_simba** – internal optimisation loop when review rejects.
+
