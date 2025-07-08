@@ -1,0 +1,39 @@
+from __future__ import annotations
+
+import os
+import random
+import textwrap
+from typing import Dict, Any
+
+from opentelemetry import trace
+
+from generated.contracts.v1 import contracts_pb2 as pb
+
+tracer = trace.get_tracer(__name__)
+
+SEED = int(os.getenv("OPENROUTER_SEED", "42"))
+
+
+def _generate_tests(spec: pb.Spec) -> str:
+    rnd = random.Random(SEED)
+    name = spec.endpoint.strip("/").replace("/", "_") or "root"
+    test_id = rnd.randint(0, 9999)
+    code = f"""import pytest
+
+
+def test_{spec.method.lower()}_{name}_{test_id}():
+    assert False, \"not implemented\"
+"""
+    return textwrap.dedent(code)
+
+
+def _validate_tests(code: str) -> None:
+    compile(code, "<generated>", "exec")
+
+
+def test_node(state: Dict[str, Any]) -> Dict[str, Any]:
+    with tracer.start_as_current_span("test_agent"):
+        spec: pb.Spec = state["spec"]  # type: ignore[name-defined]
+        code = _generate_tests(spec)
+        _validate_tests(code)
+        return {"tests": pb.Tests(code=code)}  # type: ignore[attr-defined]
