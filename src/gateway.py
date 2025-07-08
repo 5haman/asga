@@ -25,6 +25,7 @@ def create_app() -> FastAPI:
     FastAPIInstrumentor().instrument_app(app)
 
     jobs: dict[str, asyncio.Queue] = {}
+    app.state.jobs = jobs
 
     @app.middleware("http")
     async def add_trace_id_header(request: Request, call_next):
@@ -68,11 +69,14 @@ def create_app() -> FastAPI:
         queue = jobs[job_id]
 
         async def event_generator():
-            while True:
-                event = await queue.get()
-                if event is None:
-                    break
-                yield f"data: {json.dumps(event)}\n\n"
+            try:
+                while True:
+                    event = await queue.get()
+                    if event is None:
+                        break
+                    yield f"data: {json.dumps(event)}\n\n"
+            finally:
+                jobs.pop(job_id, None)
 
         return StreamingResponse(event_generator(), media_type="text/event-stream")
 

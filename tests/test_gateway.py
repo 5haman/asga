@@ -56,6 +56,22 @@ async def test_gateway_endpoints(setup_app):
 
 
 @pytest.mark.asyncio
+async def test_job_cleanup(setup_app):
+    app, _ = setup_app
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        res = await client.post("/jobs", json={"user_story": "cleanup"})
+        job_id = res.json()["job_id"]
+        assert job_id in app.state.jobs
+
+        async with client.stream("GET", f"/jobs/{job_id}") as sse:
+            async for _ in sse.aiter_lines():
+                pass
+
+        assert job_id not in app.state.jobs
+
+
+@pytest.mark.asyncio
 async def test_gateway_404s(setup_app):
     app, _ = setup_app
     transport = ASGITransport(app=app)
