@@ -20,6 +20,7 @@ OR_API_KEY = os.getenv("OPENROUTER_API_KEY")
 if not OR_API_KEY:
     raise RuntimeError("Set OPENROUTER_API_KEY before launching the server.")
 OR_MODEL = os.getenv("OPENROUTER_MODEL", "mistralai/Mistral-7B-Instruct-v0.2")
+OR_MAX_TOKENS = int(os.getenv("OPENROUTER_MAX_TOKENS", "4096"))
 
 lm = dspy.LM(
     f"openai/{OR_MODEL}",
@@ -27,7 +28,7 @@ lm = dspy.LM(
     api_base="https://openrouter.ai/api/v1",
     model_type="chat",
     temperature=0.3,
-    max_tokens=2048,
+    max_tokens=OR_MAX_TOKENS,
 )
 dspy.configure(lm=lm)
 
