@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RepairPlanEnvelope",
+  "allOf": [
+    { "$ref": "./envelope.json" }
+  ],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "required": ["steps"]
+    }
+  }
+}

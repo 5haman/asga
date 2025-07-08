@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TestsEnvelope",
+  "allOf": [
+    { "$ref": "./envelope.json" }
+  ],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "properties": {
+        "code": {"type": "string"}
+      },
+      "required": ["code"]
+    }
+  }
+}

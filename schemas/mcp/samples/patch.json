@@ -1,0 +1,5 @@
+{
+  "context": {},
+  "payload": {"diff": "--- a\n+++ b"},
+  "tool_calls": []
+}

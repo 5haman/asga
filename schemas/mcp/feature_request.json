@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FeatureRequestEnvelope",
+  "allOf": [
+    { "$ref": "./envelope.json" }
+  ],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "properties": {
+        "user_story": {"type": "string"}
+      },
+      "required": ["user_story"]
+    }
+  }
+}

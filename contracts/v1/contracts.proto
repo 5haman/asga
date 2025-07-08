@@ -1,0 +1,30 @@
+syntax = "proto3";
+package contracts.v1;
+
+message FeatureRequest {
+  string user_story = 1;
+}
+
+message Spec {
+  string endpoint = 1;
+  string method = 2;
+  string request_schema = 3;
+  string response_schema = 4;
+}
+
+message Tests {
+  string code = 1;
+}
+
+message Patch {
+  string diff = 1;
+}
+
+message Critique {
+  float score = 1;
+  string feedback = 2;
+}
+
+message RepairPlan {
+  repeated string steps = 1;
+}

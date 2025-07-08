@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CritiqueEnvelope",
+  "allOf": [
+    { "$ref": "./envelope.json" }
+  ],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "properties": {
+        "score": {"type": "number"},
+        "feedback": {"type": "string"}
+      },
+      "required": ["score", "feedback"]
+    }
+  }
+}

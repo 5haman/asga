@@ -1,0 +1,5 @@
+{
+  "context": {},
+  "payload": {"code": "def test_ok():\n    assert True"},
+  "tool_calls": []
+}
