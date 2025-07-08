@@ -9,6 +9,7 @@ from opentelemetry.trace import Tracer
 
 from generated.contracts.v1 import contracts_pb2 as pb
 from nodes.spec_agent import spec_node
+from nodes.tests_agent import test_node
 
 tracer: Tracer = trace.get_tracer(__name__)
 
@@ -24,11 +25,6 @@ class WorkflowState(TypedDict, total=False):
 
 
 # --- Node implementations -------------------------------------------------
-
-
-def test_node(state: WorkflowState) -> dict:
-    with tracer.start_as_current_span("test_agent"):
-        return {"tests": pb.Tests(code="# tests")}  # type: ignore[attr-defined]
 
 
 def code_node(state: WorkflowState) -> dict:
