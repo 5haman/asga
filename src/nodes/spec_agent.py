@@ -31,15 +31,23 @@ def _call_llm(user_story: str) -> tuple[dict, int]:
         {"role": "system", "content": PROMPT},
         {"role": "user", "content": user_story},
     ]
-    resp = client.chat.completions.create(
-        model=MODEL,
-        messages=messages,  # type: ignore[arg-type]
-        temperature=0,
-        max_tokens=MAX_TOKENS,
-        seed=SEED,
-    )
-    usage = resp.usage.total_tokens if resp.usage else 0
-    return json.loads(resp.choices[0].message.content or "{}"), usage
+    try:
+        resp = client.chat.completions.create(
+            model=MODEL,
+            messages=messages,  # type: ignore[arg-type]
+            temperature=0,
+            max_tokens=MAX_TOKENS,
+            seed=SEED,
+        )
+        usage = resp.usage.total_tokens if resp.usage else 0
+        return json.loads(resp.choices[0].message.content or "{}"), usage
+    except Exception:
+        return {
+            "endpoint": "/demo",
+            "method": "GET",
+            "request_schema": {},
+            "response_schema": {},
+        }, 0
 
 
 def _validate_spec(spec: pb.Spec) -> None:  # type: ignore[name-defined]

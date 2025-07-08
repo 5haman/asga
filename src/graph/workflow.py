@@ -10,8 +10,9 @@ from opentelemetry.trace import Tracer
 from generated.contracts.v1 import contracts_pb2 as pb
 from nodes.spec_agent import spec_node
 from nodes.tests_agent import test_node
+from nodes.code_agent import code_node
 
-tracer: Tracer = trace.get_tracer(__name__)
+tracer: Tracer = trace.get_tracer(__name__)  # type: ignore[attr-defined]
 
 
 class WorkflowState(TypedDict, total=False):
@@ -25,14 +26,6 @@ class WorkflowState(TypedDict, total=False):
 
 
 # --- Node implementations -------------------------------------------------
-
-
-def code_node(state: WorkflowState) -> dict:
-    with tracer.start_as_current_span("code_agent"):
-        attempt = state.get("attempts", 0)
-        return {"patch": pb.Patch(diff=f"diff {attempt}")}  # type: ignore[attr-defined]
-
-
 def critic_node(state: WorkflowState) -> dict:
     with tracer.start_as_current_span("critic_agent"):
         return {"critique": pb.Critique(score=1.0, feedback="ok")}  # type: ignore[attr-defined]
@@ -68,10 +61,10 @@ def route_after_repair(state: WorkflowState):
 def create_graph() -> CompiledStateGraph:
     builder = StateGraph(WorkflowState)
     builder.add_node("spec", spec_node)  # type: ignore[arg-type,call-overload]
-    builder.add_node("tests", test_node)
-    builder.add_node("code", code_node)
-    builder.add_node("critic", critic_node)
-    builder.add_node("repair", repair_node)
+    builder.add_node("tests", test_node)  # type: ignore[arg-type,call-overload]
+    builder.add_node("code", code_node)  # type: ignore[arg-type,call-overload]
+    builder.add_node("critic", critic_node)  # type: ignore[arg-type,call-overload]
+    builder.add_node("repair", repair_node)  # type: ignore[arg-type,call-overload]
 
     builder.add_edge(START, "spec")
     builder.add_edge("spec", "tests")
