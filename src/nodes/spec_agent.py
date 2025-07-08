@@ -88,16 +88,10 @@ def _call_llm(user_story: str) -> tuple[dict, int]:
         }, 0
 
 
-def _validate_spec(spec: pb.Spec) -> None:  # type: ignore[name-defined]
-    from jsonschema import Draft7Validator, RefResolver
-    from pathlib import Path
+from utils import validate_envelope
 
-    schema_path = Path("schemas/mcp/spec.json")
-    schema = json.loads(schema_path.read_text())
-    base = schema_path.parent.resolve().as_uri() + "/"
-    validator = Draft7Validator(
-        schema, resolver=RefResolver(base_uri=base, referrer=schema)
-    )
+
+def _validate_spec(spec: pb.Spec) -> None:  # type: ignore[name-defined]
     envelope = {
         "context": {},
         "payload": {
@@ -108,7 +102,7 @@ def _validate_spec(spec: pb.Spec) -> None:  # type: ignore[name-defined]
         },
         "tool_calls": [],
     }
-    validator.validate(envelope)
+    validate_envelope(envelope, "spec")
 
 
 def spec_node(state: Dict[str, Any]) -> Dict[str, Any]:
