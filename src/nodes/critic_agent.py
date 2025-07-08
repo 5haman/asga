@@ -15,22 +15,16 @@ def _score_patch(diff: str) -> float:
     return 0.9 if "assert True" in diff else 0.5
 
 
-def _validate_critique(critique: pb.Critique) -> None:  # type: ignore[name-defined]
-    from jsonschema import Draft7Validator, RefResolver
-    from pathlib import Path
+from utils import validate_envelope
 
-    schema_path = Path("schemas/mcp/critique.json")
-    schema = json.loads(schema_path.read_text())
-    base = schema_path.parent.resolve().as_uri() + "/"
-    validator = Draft7Validator(
-        schema, resolver=RefResolver(base_uri=base, referrer=schema)
-    )
+
+def _validate_critique(critique: pb.Critique) -> None:  # type: ignore[name-defined]
     envelope = {
         "context": {},
         "payload": {"score": critique.score, "feedback": critique.feedback},
         "tool_calls": [],
     }
-    validator.validate(envelope)
+    validate_envelope(envelope, "critique")
 
 
 def critic_node(state: Dict[str, Any]) -> Dict[str, Any]:
