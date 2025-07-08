@@ -1,0 +1,8 @@
+completion_fns:
+  - dummy
+
+evals:
+  - id: echo_test
+    class: evals.elsuite.basic.match:RegexMatch
+    args:
+      samples_jsonl: echo.jsonl

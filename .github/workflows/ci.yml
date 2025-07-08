@@ -14,7 +14,23 @@ jobs:
           python-version: '3.11'
       - run: pip install -r requirements.txt
       - run: pip install ruff mypy black pytest
+      - run: pip install bandit semgrep evals
       - run: ruff check --fix .
       - run: mypy src/
       - run: black --check .
-      - run: pytest -q
+      - run: pytest --cov=src --cov=tests --cov-branch --fail-under=100 -q
+      - run: bandit -r src -ll
+      - run: semgrep --config=auto
+      - name: Run OpenAI Evals
+        uses: openai/evals-action@v1
+        with:
+          suite: evals/reg_suite.yaml
+      - uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: sbom.spdx.json
+      - uses: actions/upload-artifact@v3
+        with:
+          name: sbom
+          path: sbom.spdx.json

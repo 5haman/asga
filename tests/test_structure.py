@@ -13,6 +13,7 @@ REQUIRED_PATHS = [
     ".github/workflows/ci.yml",
 ]
 
+
 def test_required_paths_exist():
     for path in REQUIRED_PATHS:
         assert Path(path).exists(), f"Missing required path: {path}"
