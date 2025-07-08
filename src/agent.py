@@ -6,7 +6,11 @@ checks that required output fields are not empty and re-prompts the model
 """
 
 from __future__ import annotations
-import os
+from config import (
+    OPENROUTER_API_KEY,
+    OPENROUTER_MODEL,
+    OPENROUTER_MAX_TOKENS,
+)
 from typing import TypedDict, Dict, Any
 
 from fastapi import FastAPI
@@ -15,11 +19,11 @@ import dspy
 from langgraph.graph import StateGraph, START, END
 
 # ─── LM via OpenRouter ───────────────────────────────────────────────────────
-OR_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OR_API_KEY = OPENROUTER_API_KEY
 if not OR_API_KEY:
     raise RuntimeError("Set OPENROUTER_API_KEY before launching the server.")
-OR_MODEL = os.getenv("OPENROUTER_MODEL", "mistralai/Mistral-7B-Instruct-v0.2")
-OR_MAX_TOKENS = int(os.getenv("OPENROUTER_MAX_TOKENS", "4096"))
+OR_MODEL = OPENROUTER_MODEL
+OR_MAX_TOKENS = OPENROUTER_MAX_TOKENS
 
 lm = dspy.LM(
     f"openai/{OR_MODEL}",

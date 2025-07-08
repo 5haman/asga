@@ -1,8 +1,14 @@
 from __future__ import annotations
 
 import json
-import os
 from typing import Dict, Any
+
+from config import (
+    OPENROUTER_MODEL,
+    OPENROUTER_MAX_TOKENS,
+    OPENROUTER_API_KEY,
+    OPENROUTER_SEED,
+)
 
 import dspy
 from dspy.teleprompt import SIMBA
@@ -14,10 +20,10 @@ from generated.contracts.v1 import contracts_pb2 as pb
 tracer = trace.get_tracer(__name__)
 
 # --- OpenRouter client configuration --------------------------------------
-MODEL = os.getenv("OPENROUTER_MODEL", "openrouter/mistral-large-latest")
-MAX_TOKENS = int(os.getenv("OPENROUTER_MAX_TOKENS", "4096"))
-API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-SEED = int(os.getenv("OPENROUTER_SEED", "42"))
+MODEL = OPENROUTER_MODEL
+MAX_TOKENS = OPENROUTER_MAX_TOKENS
+API_KEY = OPENROUTER_API_KEY
+SEED = OPENROUTER_SEED
 
 lm = dspy.LM(
     f"openai/{MODEL}",
