@@ -1,17 +1,11 @@
-import sys
-from pathlib import Path
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
-
-sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
-
 from graph import workflow  # type: ignore
 from generated.contracts.v1 import contracts_pb2 as pb
-
 
 def setup_tracer():
     exporter = InMemorySpanExporter()

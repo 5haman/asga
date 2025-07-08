@@ -1,7 +1,4 @@
 import json
-import sys
-from pathlib import Path
-
 import pytest
 from httpx import AsyncClient, ASGITransport
 from opentelemetry import trace
@@ -10,11 +7,7 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
-
-sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
-
 from gateway import create_app
-
 
 @pytest.fixture()
 def setup_app():
