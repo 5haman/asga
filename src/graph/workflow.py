@@ -6,6 +6,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.state import CompiledStateGraph
 from opentelemetry import trace
 from opentelemetry.trace import Tracer
+from langfuse import observe
 
 from generated.contracts.v1 import contracts_pb2 as pb
 from nodes.spec_agent import spec_node
@@ -29,6 +30,7 @@ class WorkflowState(TypedDict, total=False):
 # --- Node implementations -------------------------------------------------
 
 
+@observe()
 def repair_node(state: WorkflowState) -> dict:
     with tracer.start_as_current_span("repair_agent"):
         attempt = state.get("attempts", 0) + 1

@@ -8,6 +8,7 @@ import dspy
 from dspy.teleprompt import SIMBA
 from dspy.primitives.example import Example
 from opentelemetry import trace
+from langfuse import observe
 
 from generated.contracts.v1 import contracts_pb2 as pb
 
@@ -105,6 +106,7 @@ def _validate_spec(spec: pb.Spec) -> None:  # type: ignore[name-defined]
     validator.validate(envelope)
 
 
+@observe()
 def spec_node(state: Dict[str, Any]) -> Dict[str, Any]:
     with tracer.start_as_current_span("spec_agent"):
         feature: pb.FeatureRequest = state["feature_request"]  # type: ignore[name-defined]

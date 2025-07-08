@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse, PlainTextResponse
 from google.protobuf.json_format import MessageToDict
 from opentelemetry import trace
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from langfuse import Langfuse
 from pydantic import BaseModel
 
 from generated.contracts.v1 import contracts_pb2 as pb
@@ -23,6 +24,7 @@ class FeatureRequestModel(BaseModel):
 def create_app() -> FastAPI:
     app = FastAPI(title="ASGA Gateway", version="0.1.0")
     FastAPIInstrumentor().instrument_app(app)
+    Langfuse()
 
     jobs: dict[str, asyncio.Queue] = {}
 
