@@ -1,14 +1,8 @@
 import json
 from types import SimpleNamespace
-from pathlib import Path
-import sys
 import pytest
-
-sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
-
 from generated.contracts.v1 import contracts_pb2 as pb
 from nodes import spec_agent
-
 
 class DummyPredictor:
     def __init__(self, content: dict, tokens: int = 10):

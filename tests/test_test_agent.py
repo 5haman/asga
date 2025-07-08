@@ -1,11 +1,6 @@
 import hashlib
 import subprocess
-import sys
 from pathlib import Path
-
-
-sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
-
 from generated.contracts.v1 import contracts_pb2 as pb
 from nodes import tests_agent as test_agent
 
