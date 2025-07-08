@@ -13,8 +13,8 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install -r requirements.txt
-      - run: pip install ruff mypy black pytest
+      - run: pip install ruff mypy black pytest pytest-cov
       - run: ruff check --fix .
       - run: mypy src/
       - run: black --check .
-      - run: pytest -q
+      - run: pytest --cov=src --cov=tests --cov-branch --fail-under=100 -q

@@ -60,3 +60,18 @@ def test_budget(monkeypatch):
         {"feature_request": pb.FeatureRequest(user_story="demo")}
     )
     assert result["token_count"] < spec_agent.MAX_TOKENS
+
+
+def test_budget_exceeded(monkeypatch):
+    def fake_call(*args, **kwargs):
+        payload = {
+            "endpoint": "/demo",
+            "method": "GET",
+            "request_schema": {},
+            "response_schema": {},
+        }
+        return payload, spec_agent.MAX_TOKENS
+
+    monkeypatch.setattr(spec_agent, "_call_llm", fake_call)
+    with pytest.raises(ValueError):
+        spec_agent.spec_node({"feature_request": pb.FeatureRequest(user_story="demo")})

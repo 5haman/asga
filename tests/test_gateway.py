@@ -53,3 +53,15 @@ async def test_gateway_endpoints(setup_app):
     trace.get_tracer_provider().force_flush()  # type: ignore[attr-defined]
     spans = exporter.get_finished_spans()
     assert len(spans) >= 1
+
+
+@pytest.mark.asyncio
+async def test_gateway_404s(setup_app):
+    app, _ = setup_app
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        missing = await client.get("/jobs/bad-id")
+        assert missing.status_code == 404
+
+        miss_prompt = await client.get("/prompt/missing")
+        assert miss_prompt.status_code == 404
