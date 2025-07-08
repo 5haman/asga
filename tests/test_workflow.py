@@ -24,6 +24,20 @@ def setup_tracer():
 def test_happy_path(monkeypatch):
     exporter = setup_tracer()
 
+    def spec_stub(state: workflow.WorkflowState):
+        with workflow.tracer.start_as_current_span("spec_agent"):
+            return {
+                "spec": pb.Spec(
+                    endpoint="/demo",
+                    method="GET",
+                    request_schema="{}",
+                    response_schema="{}",
+                ),
+                "token_count": 10,
+            }
+
+    monkeypatch.setattr(workflow, "spec_node", spec_stub)
+
     def critic_success(state: workflow.WorkflowState):
         with workflow.tracer.start_as_current_span("critic_agent"):
             return {"critique": pb.Critique(score=0.9, feedback="ok")}
@@ -42,6 +56,20 @@ def test_happy_path(monkeypatch):
 def test_critic_fail(monkeypatch):
     exporter = setup_tracer()
 
+    def spec_stub(state: workflow.WorkflowState):
+        with workflow.tracer.start_as_current_span("spec_agent"):
+            return {
+                "spec": pb.Spec(
+                    endpoint="/demo",
+                    method="GET",
+                    request_schema="{}",
+                    response_schema="{}",
+                ),
+                "token_count": 10,
+            }
+
+    monkeypatch.setattr(workflow, "spec_node", spec_stub)
+
     def critic_fail(state: workflow.WorkflowState):
         with workflow.tracer.start_as_current_span("critic_agent"):
             return {"critique": pb.Critique(score=0.5, feedback="bad")}
@@ -58,6 +86,20 @@ def test_critic_fail(monkeypatch):
 
 def test_trace_propagation():
     exporter = setup_tracer()
+
+    def spec_stub(state: workflow.WorkflowState):
+        with workflow.tracer.start_as_current_span("spec_agent"):
+            return {
+                "spec": pb.Spec(
+                    endpoint="/demo",
+                    method="GET",
+                    request_schema="{}",
+                    response_schema="{}",
+                ),
+                "token_count": 10,
+            }
+
+    workflow.spec_node = spec_stub
     graph = workflow.create_graph()
     with workflow.tracer.start_as_current_span("run"):
         graph.invoke({"feature_request": pb.FeatureRequest(user_story="hi")})
