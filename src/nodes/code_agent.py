@@ -4,6 +4,7 @@ import difflib
 from typing import Dict, Any
 
 from opentelemetry import trace
+from langfuse import observe
 
 from generated.contracts.v1 import contracts_pb2 as pb
 
@@ -24,6 +25,7 @@ def _create_patch(tests: pb.Tests) -> str:  # type: ignore[name-defined]
     return "".join(diff)
 
 
+@observe()
 def code_node(state: Dict[str, Any]) -> Dict[str, Any]:
     with tracer.start_as_current_span("code_agent"):
         tests: pb.Tests = state["tests"]  # type: ignore[name-defined]

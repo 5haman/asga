@@ -6,6 +6,7 @@ import textwrap
 from typing import Dict, Any
 
 from opentelemetry import trace
+from langfuse import observe
 
 from generated.contracts.v1 import contracts_pb2 as pb
 
@@ -31,6 +32,7 @@ def _validate_tests(code: str) -> None:
     compile(code, "<generated>", "exec")
 
 
+@observe()
 def test_node(state: Dict[str, Any]) -> Dict[str, Any]:
     with tracer.start_as_current_span("test_agent"):
         spec: pb.Spec = state["spec"]  # type: ignore[name-defined]

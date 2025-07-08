@@ -4,6 +4,7 @@ import json
 from typing import Dict, Any
 
 from opentelemetry import trace
+from langfuse import observe
 
 from generated.contracts.v1 import contracts_pb2 as pb
 
@@ -27,6 +28,7 @@ def _validate_critique(critique: pb.Critique) -> None:  # type: ignore[name-defi
     validate_envelope(envelope, "critique")
 
 
+@observe()
 def critic_node(state: Dict[str, Any]) -> Dict[str, Any]:
     with tracer.start_as_current_span("critic_agent"):
         patch: pb.Patch = state["patch"]  # type: ignore[name-defined]
