@@ -9,12 +9,12 @@ from opentelemetry import trace
 
 from generated.contracts.v1 import contracts_pb2 as pb
 
-tracer = trace.get_tracer(__name__)
+tracer = trace.get_tracer(__name__)  # type: ignore[attr-defined]
 
 SEED = int(os.getenv("OPENROUTER_SEED", "42"))
 
 
-def _generate_tests(spec: pb.Spec) -> str:
+def _generate_tests(spec: pb.Spec) -> str:  # type: ignore[name-defined]
     rnd = random.Random(SEED)
     name = spec.endpoint.strip("/").replace("/", "_") or "root"
     test_id = rnd.randint(0, 9999)
