@@ -18,7 +18,7 @@ jobs:
       - run: ruff check --fix .
       - run: mypy src/
       - run: black --check .
-      - run: pytest -q
+      - run: pytest --cov=src --cov=tests --cov-branch --fail-under=100 -q
       - run: bandit -r src -ll
       - run: semgrep --config=auto
       - name: Run OpenAI Evals

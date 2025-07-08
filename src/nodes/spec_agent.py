@@ -1,10 +1,18 @@
 from __future__ import annotations
 
 import json
-import os
 from typing import Dict, Any
 
-import openai
+from config import (
+    OPENROUTER_MODEL,
+    OPENROUTER_MAX_TOKENS,
+    OPENROUTER_API_KEY,
+    OPENROUTER_SEED,
+)
+
+import dspy
+from dspy.teleprompt import SIMBA
+from dspy.primitives.example import Example
 from opentelemetry import trace
 
 from generated.contracts.v1 import contracts_pb2 as pb
@@ -12,35 +20,65 @@ from generated.contracts.v1 import contracts_pb2 as pb
 tracer = trace.get_tracer(__name__)
 
 # --- OpenRouter client configuration --------------------------------------
-MODEL = os.getenv("OPENROUTER_MODEL", "openrouter/mistral-large-latest")
-MAX_TOKENS = int(os.getenv("OPENROUTER_MAX_TOKENS", "4096"))
-API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-SEED = int(os.getenv("OPENROUTER_SEED", "42"))
+MODEL = OPENROUTER_MODEL
+MAX_TOKENS = OPENROUTER_MAX_TOKENS
+API_KEY = OPENROUTER_API_KEY
+SEED = OPENROUTER_SEED
 
-client = openai.OpenAI(api_key=API_KEY, base_url="https://openrouter.ai/api/v1")
-
-PROMPT = (
-    "### TASK\n"
-    "Emit a JSON object with keys: endpoint, method, request_schema, "
-    "response_schema. Return ONLY the JSON."
+lm = dspy.LM(
+    f"openai/{MODEL}",
+    api_key=API_KEY,
+    api_base="https://openrouter.ai/api/v1",
+    model_type="chat",
+    temperature=0,
+    max_tokens=MAX_TOKENS,
 )
+dspy.configure(lm=lm)
+
+
+class SpecExtractor(dspy.Signature):
+    """Extract API spec from a feature request."""
+
+    user_story: str = dspy.InputField(desc="End‑user story")
+    endpoint: str = dspy.OutputField(desc="Endpoint path")
+    method: str = dspy.OutputField(desc="HTTP verb")
+    request_schema: str = dspy.OutputField(desc="Request schema JSON")
+    response_schema: str = dspy.OutputField(desc="Response schema JSON")
+
+
+# Small training set for SIMBA
+_trainset = [
+    Example(
+        user_story="upload a file",
+        endpoint="/files",
+        method="POST",
+        request_schema="{}",
+        response_schema="{}",
+    ).with_inputs("user_story"),
+    Example(
+        user_story="list files",
+        endpoint="/files",
+        method="GET",
+        request_schema="{}",
+        response_schema="{}",
+    ).with_inputs("user_story"),
+]
+
+_simba = SIMBA(metric=lambda ex, pred: 1.0, bsize=1, max_steps=1)
+spec_predictor = _simba.compile(dspy.Predict(SpecExtractor), trainset=_trainset, seed=SEED)
 
 
 def _call_llm(user_story: str) -> tuple[dict, int]:
-    messages = [
-        {"role": "system", "content": PROMPT},
-        {"role": "user", "content": user_story},
-    ]
     try:
-        resp = client.chat.completions.create(
-            model=MODEL,
-            messages=messages,  # type: ignore[arg-type]
-            temperature=0,
-            max_tokens=MAX_TOKENS,
-            seed=SEED,
-        )
-        usage = resp.usage.total_tokens if resp.usage else 0
-        return json.loads(resp.choices[0].message.content or "{}"), usage
+        res = spec_predictor(user_story=user_story)
+        usage = getattr(res._raw_output, "usage", None)
+        tokens = getattr(usage, "total_tokens", 0) if usage else 0
+        return {
+            "endpoint": res.endpoint,
+            "method": res.method,
+            "request_schema": json.loads(res.request_schema or "{}"),
+            "response_schema": json.loads(res.response_schema or "{}"),
+        }, tokens
     except Exception:
         return {
             "endpoint": "/demo",
@@ -50,16 +88,10 @@ def _call_llm(user_story: str) -> tuple[dict, int]:
         }, 0
 
 
-def _validate_spec(spec: pb.Spec) -> None:  # type: ignore[name-defined]
-    from jsonschema import Draft7Validator, RefResolver
-    from pathlib import Path
+from utils import validate_envelope
 
-    schema_path = Path("schemas/mcp/spec.json")
-    schema = json.loads(schema_path.read_text())
-    base = schema_path.parent.resolve().as_uri() + "/"
-    validator = Draft7Validator(
-        schema, resolver=RefResolver(base_uri=base, referrer=schema)
-    )
+
+def _validate_spec(spec: pb.Spec) -> None:  # type: ignore[name-defined]
     envelope = {
         "context": {},
         "payload": {
@@ -70,7 +102,7 @@ def _validate_spec(spec: pb.Spec) -> None:  # type: ignore[name-defined]
         },
         "tool_calls": [],
     }
-    validator.validate(envelope)
+    validate_envelope(envelope, "spec")
 
 
 def spec_node(state: Dict[str, Any]) -> Dict[str, Any]:
