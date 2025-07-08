@@ -11,6 +11,7 @@ from generated.contracts.v1 import contracts_pb2 as pb
 from nodes.spec_agent import spec_node
 from nodes.tests_agent import test_node
 from nodes.code_agent import code_node
+from nodes.critic_agent import critic_node
 
 tracer: Tracer = trace.get_tracer(__name__)  # type: ignore[attr-defined]
 
@@ -26,9 +27,6 @@ class WorkflowState(TypedDict, total=False):
 
 
 # --- Node implementations -------------------------------------------------
-def critic_node(state: WorkflowState) -> dict:
-    with tracer.start_as_current_span("critic_agent"):
-        return {"critique": pb.Critique(score=1.0, feedback="ok")}  # type: ignore[attr-defined]
 
 
 def repair_node(state: WorkflowState) -> dict:
