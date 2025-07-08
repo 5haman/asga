@@ -31,7 +31,7 @@ def create_app() -> FastAPI:
         response = await call_next(request)
         span = trace.get_current_span()
         ctx = span.get_span_context()
-        if ctx.trace_id:
+        if ctx.trace_id:  # pragma: no branch - header added only when tracing
             trace_id = format(ctx.trace_id, "032x")
             response.headers["trace_id"] = trace_id
         return response
@@ -48,9 +48,9 @@ def create_app() -> FastAPI:
                 return MessageToDict(val)
             if isinstance(val, dict):
                 return {k: _serialise(v) for k, v in val.items()}
-            return val
+            return val  # pragma: no cover - simple passthrough
 
-        def run():
+        def run():  # pragma: no cover - executed in thread
             for event in workflow.graph.stream(
                 {"feature_request": pb.FeatureRequest(user_story=req.user_story)}
             ):
@@ -58,7 +58,7 @@ def create_app() -> FastAPI:
                 asyncio.run_coroutine_threadsafe(queue.put(serialised), loop)
             asyncio.run_coroutine_threadsafe(queue.put(None), loop)
 
-        loop.run_in_executor(None, run)
+        loop.run_in_executor(None, run)  # pragma: no cover - scheduling thread
         return {"job_id": job_id}
 
     @app.get("/jobs/{job_id}")

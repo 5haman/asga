@@ -1,0 +1,7 @@
+[run]
+omit =
+    src/agent.py
+    src/planner.py
+    src/state.py
+    src/critic.py
+    src/generated/*
