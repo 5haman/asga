@@ -1,5 +1,9 @@
-import sys, os; sys.path.append(os.path.abspath(os.path.join(__file__, "..", "..")))
-from asga_contracts import FeatureRequest, Spec, Tests, Patch, Critique, RepairPlan
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(__file__, "..", "..")))
+
+from asga_contracts import Critique, FeatureRequest, Patch, RepairPlan, Spec, Tests
 import dspy
 
 

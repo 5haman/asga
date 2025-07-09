@@ -14,8 +14,8 @@ import dspy
 from dspy.teleprompt import SIMBA
 from dspy.primitives.example import Example
 from langfuse import observe
-
 from generated.contracts.v1 import contracts_pb2 as pb
+from utils import get_logger, validate_envelope
 
 
 # --- OpenRouter client configuration --------------------------------------
@@ -64,7 +64,9 @@ _trainset = [
 ]
 
 _simba = SIMBA(metric=lambda ex, pred: 1.0, bsize=1, max_steps=1)
-spec_predictor = _simba.compile(dspy.Predict(SpecExtractor), trainset=_trainset, seed=SEED)
+spec_predictor = _simba.compile(
+    dspy.Predict(SpecExtractor), trainset=_trainset, seed=SEED
+)
 
 
 def _call_llm(user_story: str) -> tuple[dict, int]:
@@ -86,8 +88,6 @@ def _call_llm(user_story: str) -> tuple[dict, int]:
             "response_schema": {},
         }, 0
 
-
-from utils import validate_envelope, get_logger
 
 logger = get_logger(__name__)
 
