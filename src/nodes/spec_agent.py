@@ -65,7 +65,9 @@ _trainset = [
 
 _simba = SIMBA(metric=lambda ex, pred: 1.0, bsize=1, max_steps=1)
 spec_predictor = _simba.compile(
-    dspy.Predict(SpecExtractor), trainset=_trainset, seed=SEED
+    dspy.Predict(SpecExtractor, output_format="json"),
+    trainset=_trainset,
+    seed=SEED,
 )
 
 

@@ -77,3 +77,7 @@ def test_budget_exceeded(monkeypatch):
     monkeypatch.setattr(spec_agent, "_call_llm", fake_call)
     with pytest.raises(ValueError):
         spec_agent.spec_node({"feature_request": pb.FeatureRequest(user_story="demo")})
+
+
+def test_predictor_json_mode():
+    assert spec_agent.spec_predictor.get_config().get("output_format") == "json"
