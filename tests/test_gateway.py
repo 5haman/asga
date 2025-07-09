@@ -49,6 +49,9 @@ async def test_job_cleanup(setup_app):
 
         assert job_id not in app.state.jobs
 
+        gone = await client.get(f"/jobs/{job_id}")
+        assert gone.status_code == 410
+
 
 @pytest.mark.asyncio
 async def test_gateway_404s(setup_app):

@@ -32,14 +32,17 @@ def create_app() -> FastAPI:
         )
 
     jobs: dict[str, asyncio.Queue] = {}
+    finished_jobs: set[str] = set()
     app.state.jobs = jobs
-
+    app.state.finished_jobs = finished_jobs
+  
     @app.post("/jobs")
     async def start_job(req: FeatureRequestModel):
         job_id = str(uuid4())
         logger.debug("start_job %s", job_id)
         queue: asyncio.Queue = asyncio.Queue()
         jobs[job_id] = queue
+        finished_jobs.discard(job_id)
         loop = asyncio.get_running_loop()
 
         def _serialise(val):
@@ -64,6 +67,8 @@ def create_app() -> FastAPI:
     @app.get("/jobs/{job_id}")
     async def job_events(job_id: str):
         if job_id not in jobs:
+            if job_id in finished_jobs:
+                raise HTTPException(410, "job finished")
             raise HTTPException(404, "job not found")
         queue = jobs[job_id]
 
@@ -77,6 +82,7 @@ def create_app() -> FastAPI:
                     yield f"data: {json.dumps(event)}\n\n"
             finally:
                 jobs.pop(job_id, None)
+                finished_jobs.add(job_id)
 
         return StreamingResponse(event_generator(), media_type="text/event-stream")
 
