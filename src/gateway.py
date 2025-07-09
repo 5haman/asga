@@ -5,11 +5,9 @@ import json
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse, PlainTextResponse
 from google.protobuf.json_format import MessageToDict
-from opentelemetry import trace
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from langfuse import Langfuse
 from pydantic import BaseModel
 
@@ -23,21 +21,12 @@ class FeatureRequestModel(BaseModel):
 
 def create_app() -> FastAPI:
     app = FastAPI(title="ASGA Gateway", version="0.1.0")
-    FastAPIInstrumentor().instrument_app(app)
     Langfuse()
 
     jobs: dict[str, asyncio.Queue] = {}
     app.state.jobs = jobs
 
-    @app.middleware("http")
-    async def add_trace_id_header(request: Request, call_next):
-        response = await call_next(request)
-        span = trace.get_current_span()
-        ctx = span.get_span_context()
-        if ctx.trace_id:  # pragma: no branch - header added only when tracing
-            trace_id = format(ctx.trace_id, "032x")
-            response.headers["trace_id"] = trace_id
-        return response
+
 
     @app.post("/jobs")
     async def start_job(req: FeatureRequestModel):

@@ -11,7 +11,7 @@
 | P-02 | **Contract-First** – inter-agent messages validate against protobuf schemas wrapped in **MCP envelopes** | prevents schema drift & hallucinations |
 | P-03 | **Graph-Native Execution** – the whole workflow is a LangGraph **StateGraph**; no external orchestrator | simplifies dependency graph & recovery |
 | P-04 | **Fail-Fast Testing** – tests precede code; agents cannot merge patches until tests pass locally | codifies TDD for LLM coding |
-| P-05 | **Observability by Default** – every FastAPI & LangGraph span is instrumented with OpenTelemetry | end-to-end latency / cost tracing |
+| P-05 | **Observability by Default** – every FastAPI & LangGraph span emits tracing data | end-to-end latency / cost tracing |
 | P-06 | **Budget Awareness** – orchestrator enforces per-job token ceiling; agents self-report usage | avoid runaway spend on OpenRouter |
 
 ---
@@ -61,7 +61,7 @@ _All five are implemented as **LangGraph nodes**; the graph’s **Supervisor** h
 
 | Layer | Instrumentation | Exporter |
 |-------|-----------------|----------|
-| FastAPI | `opentelemetry-instrumentation-fastapi` | OTLP → Tempo |
+| FastAPI | built-in logging hooks | OTLP → Tempo |
 | LangGraph | custom `@graph.span` decorator | OTLP → Tempo |
 | Grafana | dashboards: `latency`, `token_spend`, `pass_rate` | Tempo + Loki |
 

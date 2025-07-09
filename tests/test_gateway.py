@@ -1,27 +1,17 @@
 import json
 import pytest
 from httpx import AsyncClient, ASGITransport
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
-    InMemorySpanExporter,
-)
 from gateway import create_app
 
 @pytest.fixture()
 def setup_app():
-    exporter = InMemorySpanExporter()
-    provider = TracerProvider()
-    provider.add_span_processor(SimpleSpanProcessor(exporter))
-    trace._set_tracer_provider(provider, False)  # type: ignore[attr-defined]
     app = create_app()
-    return app, exporter
+    return app
 
 
 @pytest.mark.asyncio
 async def test_gateway_endpoints(setup_app):
-    app, exporter = setup_app
+    app = setup_app
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         res = await client.post("/jobs", json={"user_story": "hi"})
@@ -41,16 +31,11 @@ async def test_gateway_endpoints(setup_app):
 
         openapi = await client.get("/openapi.json")
         assert openapi.status_code == 200
-        assert "trace_id" in openapi.headers
-
-    trace.get_tracer_provider().force_flush()  # type: ignore[attr-defined]
-    spans = exporter.get_finished_spans()
-    assert len(spans) >= 1
 
 
 @pytest.mark.asyncio
 async def test_job_cleanup(setup_app):
-    app, _ = setup_app
+    app = setup_app
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         res = await client.post("/jobs", json={"user_story": "cleanup"})
@@ -66,7 +51,7 @@ async def test_job_cleanup(setup_app):
 
 @pytest.mark.asyncio
 async def test_gateway_404s(setup_app):
-    app, _ = setup_app
+    app = setup_app
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         missing = await client.get("/jobs/bad-id")

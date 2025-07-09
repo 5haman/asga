@@ -13,12 +13,10 @@ from config import (
 import dspy
 from dspy.teleprompt import SIMBA
 from dspy.primitives.example import Example
-from opentelemetry import trace
 from langfuse import observe
 
 from generated.contracts.v1 import contracts_pb2 as pb
 
-tracer = trace.get_tracer(__name__)
 
 # --- OpenRouter client configuration --------------------------------------
 MODEL = OPENROUTER_MODEL
@@ -108,19 +106,18 @@ def _validate_spec(spec: pb.Spec) -> None:  # type: ignore[name-defined]
 
 @observe()
 def spec_node(state: Dict[str, Any]) -> Dict[str, Any]:
-    with tracer.start_as_current_span("spec_agent"):
-        feature: pb.FeatureRequest = state["feature_request"]  # type: ignore[name-defined]
-        text = feature.user_story
-        if any(x in text.lower() for x in ["ignore previous", "system:"]):
-            raise ValueError("possible prompt injection")
-        data, tokens = _call_llm(text)
-        spec = pb.Spec(  # type: ignore[attr-defined]
-            endpoint=data.get("endpoint", ""),
-            method=data.get("method", ""),
-            request_schema=json.dumps(data.get("request_schema", {})),
-            response_schema=json.dumps(data.get("response_schema", {})),
-        )
-        _validate_spec(spec)
-        if tokens >= MAX_TOKENS:
-            raise ValueError("token budget exceeded")
-        return {"spec": spec, "token_count": tokens}
+    feature: pb.FeatureRequest = state["feature_request"]  # type: ignore[name-defined]
+    text = feature.user_story
+    if any(x in text.lower() for x in ["ignore previous", "system:"]):
+        raise ValueError("possible prompt injection")
+    data, tokens = _call_llm(text)
+    spec = pb.Spec(  # type: ignore[attr-defined]
+        endpoint=data.get("endpoint", ""),
+        method=data.get("method", ""),
+        request_schema=json.dumps(data.get("request_schema", {})),
+        response_schema=json.dumps(data.get("response_schema", {})),
+    )
+    _validate_spec(spec)
+    if tokens >= MAX_TOKENS:
+        raise ValueError("token budget exceeded")
+    return {"spec": spec, "token_count": tokens}
