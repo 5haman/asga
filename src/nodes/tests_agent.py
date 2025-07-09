@@ -5,12 +5,11 @@ import random
 import textwrap
 from typing import Dict, Any
 
-from opentelemetry import trace
 from langfuse import observe
 
 from generated.contracts.v1 import contracts_pb2 as pb
 
-tracer = trace.get_tracer(__name__)  # type: ignore[attr-defined]
+
 
 SEED = int(os.getenv("OPENROUTER_SEED", "42"))
 
@@ -34,8 +33,7 @@ def _validate_tests(code: str) -> None:
 
 @observe()
 def test_node(state: Dict[str, Any]) -> Dict[str, Any]:
-    with tracer.start_as_current_span("test_agent"):
-        spec: pb.Spec = state["spec"]  # type: ignore[name-defined]
-        code = _generate_tests(spec)
-        _validate_tests(code)
-        return {"tests": pb.Tests(code=code)}  # type: ignore[attr-defined]
+    spec: pb.Spec = state["spec"]  # type: ignore[name-defined]
+    code = _generate_tests(spec)
+    _validate_tests(code)
+    return {"tests": pb.Tests(code=code)}  # type: ignore[attr-defined]

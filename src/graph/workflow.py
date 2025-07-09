@@ -4,8 +4,6 @@ from typing import TypedDict
 
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.state import CompiledStateGraph
-from opentelemetry import trace
-from opentelemetry.trace import Tracer
 from langfuse import observe
 
 from generated.contracts.v1 import contracts_pb2 as pb
@@ -14,7 +12,7 @@ from nodes.tests_agent import test_node
 from nodes.code_agent import code_node
 from nodes.critic_agent import critic_node
 
-tracer: Tracer = trace.get_tracer(__name__)  # type: ignore[attr-defined]
+
 
 
 class WorkflowState(TypedDict, total=False):
@@ -32,12 +30,11 @@ class WorkflowState(TypedDict, total=False):
 
 @observe()
 def repair_node(state: WorkflowState) -> dict:
-    with tracer.start_as_current_span("repair_agent"):
-        attempt = state.get("attempts", 0) + 1
-        return {
-            "repair_plan": pb.RepairPlan(steps=[f"fix {attempt}"]),  # type: ignore[attr-defined]
-            "attempts": attempt,
-        }
+    attempt = state.get("attempts", 0) + 1
+    return {
+        "repair_plan": pb.RepairPlan(steps=[f"fix {attempt}"]),  # type: ignore[attr-defined]
+        "attempts": attempt,
+    }
 
 
 # --- Routers ---------------------------------------------------------------
