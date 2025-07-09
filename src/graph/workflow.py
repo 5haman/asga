@@ -2,20 +2,17 @@ from __future__ import annotations
 
 from typing import TypedDict
 
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langfuse import observe
 from utils import get_logger
-
-logger = get_logger(__name__)
-
 from generated.contracts.v1 import contracts_pb2 as pb
 from nodes.spec_agent import spec_node
 from nodes.tests_agent import test_node
 from nodes.code_agent import code_node
 from nodes.critic_agent import critic_node
 
-
+logger = get_logger(__name__)
 
 
 class WorkflowState(TypedDict, total=False):

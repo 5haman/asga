@@ -3,21 +3,15 @@ from __future__ import annotations
 from typing import Dict, Any
 
 from langfuse import observe
-from utils import get_logger
-
-logger = get_logger(__name__)
-
+from utils import get_logger, validate_envelope
 from generated.contracts.v1 import contracts_pb2 as pb
 
-
+logger = get_logger(__name__)
 
 
 def _score_patch(diff: str) -> float:
     """Simple heuristic scoring for a patch diff."""
     return 0.9 if "assert True" in diff else 0.5
-
-
-from utils import validate_envelope
 
 
 def _validate_critique(critique: pb.Critique) -> None:  # type: ignore[name-defined]

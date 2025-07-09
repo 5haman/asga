@@ -7,11 +7,9 @@ from typing import Dict, Any
 
 from langfuse import observe
 from utils import get_logger
-
-logger = get_logger(__name__)
-
 from generated.contracts.v1 import contracts_pb2 as pb
 
+logger = get_logger(__name__)
 
 
 SEED = int(os.getenv("OPENROUTER_SEED", "42"))
