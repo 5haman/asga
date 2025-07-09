@@ -87,7 +87,9 @@ def _call_llm(user_story: str) -> tuple[dict, int]:
         }, 0
 
 
-from utils import validate_envelope
+from utils import validate_envelope, get_logger
+
+logger = get_logger(__name__)
 
 
 def _validate_spec(spec: pb.Spec) -> None:  # type: ignore[name-defined]
@@ -108,6 +110,7 @@ def _validate_spec(spec: pb.Spec) -> None:  # type: ignore[name-defined]
 def spec_node(state: Dict[str, Any]) -> Dict[str, Any]:
     feature: pb.FeatureRequest = state["feature_request"]  # type: ignore[name-defined]
     text = feature.user_story
+    logger.debug("spec_node input: %s", text)
     if any(x in text.lower() for x in ["ignore previous", "system:"]):
         raise ValueError("possible prompt injection")
     data, tokens = _call_llm(text)
@@ -118,6 +121,9 @@ def spec_node(state: Dict[str, Any]) -> Dict[str, Any]:
         response_schema=json.dumps(data.get("response_schema", {})),
     )
     _validate_spec(spec)
+    logger.debug("spec_node generated spec: %s", spec)
     if tokens >= MAX_TOKENS:
         raise ValueError("token budget exceeded")
-    return {"spec": spec, "token_count": tokens}
+    result = {"spec": spec, "token_count": tokens}
+    logger.debug("spec_node output: %s", result)
+    return result

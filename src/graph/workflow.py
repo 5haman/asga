@@ -5,6 +5,9 @@ from typing import TypedDict
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.state import CompiledStateGraph
 from langfuse import observe
+from utils import get_logger
+
+logger = get_logger(__name__)
 
 from generated.contracts.v1 import contracts_pb2 as pb
 from nodes.spec_agent import spec_node
@@ -31,10 +34,13 @@ class WorkflowState(TypedDict, total=False):
 @observe()
 def repair_node(state: WorkflowState) -> dict:
     attempt = state.get("attempts", 0) + 1
-    return {
+    logger.debug("repair_node attempt %d", attempt)
+    result = {
         "repair_plan": pb.RepairPlan(steps=[f"fix {attempt}"]),  # type: ignore[attr-defined]
         "attempts": attempt,
     }
+    logger.debug("repair_node output: %s", result)
+    return result
 
 
 # --- Routers ---------------------------------------------------------------
@@ -56,6 +62,7 @@ def route_after_repair(state: WorkflowState):
 
 
 def create_graph() -> CompiledStateGraph:
+    logger.debug("create_graph")
     builder = StateGraph(WorkflowState)
     builder.add_node("spec", spec_node)  # type: ignore[arg-type,call-overload]
     builder.add_node("tests", test_node)  # type: ignore[arg-type,call-overload]
@@ -71,7 +78,9 @@ def create_graph() -> CompiledStateGraph:
     builder.add_conditional_edges("critic", route_after_critic)
     builder.add_conditional_edges("repair", route_after_repair)
 
-    return builder.compile()
+    compiled = builder.compile()
+    logger.debug("graph compiled")
+    return compiled
 
 
 # default compiled graph

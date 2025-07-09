@@ -6,6 +6,9 @@ import textwrap
 from typing import Dict, Any
 
 from langfuse import observe
+from utils import get_logger
+
+logger = get_logger(__name__)
 
 from generated.contracts.v1 import contracts_pb2 as pb
 
@@ -34,6 +37,9 @@ def _validate_tests(code: str) -> None:
 @observe()
 def test_node(state: Dict[str, Any]) -> Dict[str, Any]:
     spec: pb.Spec = state["spec"]  # type: ignore[name-defined]
+    logger.debug("test_node input endpoint: %s", spec.endpoint)
     code = _generate_tests(spec)
     _validate_tests(code)
-    return {"tests": pb.Tests(code=code)}  # type: ignore[attr-defined]
+    result = {"tests": pb.Tests(code=code)}  # type: ignore[attr-defined]
+    logger.debug("test_node output length: %d", len(code))
+    return result
