@@ -3,6 +3,7 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 from gateway import create_app
 
+
 @pytest.fixture()
 def setup_app():
     app = create_app()
