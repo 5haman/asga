@@ -65,7 +65,9 @@ _trainset = [
 
 _simba = SIMBA(metric=lambda ex, pred: 1.0, bsize=1, max_steps=1)
 spec_predictor = _simba.compile(
-    dspy.Predict(SpecExtractor), trainset=_trainset, seed=SEED
+    dspy.Predict(SpecExtractor, output_format="json"),
+    trainset=_trainset,
+    seed=SEED,
 )
 
 
@@ -81,6 +83,7 @@ def _call_llm(user_story: str) -> tuple[dict, int]:
             "response_schema": json.loads(res.response_schema or "{}"),
         }, tokens
     except Exception:
+        logger.exception("LLM spec extraction failed for user story: %s", user_story)
         return {
             "endpoint": "/demo",
             "method": "GET",

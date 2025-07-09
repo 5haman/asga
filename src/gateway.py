@@ -9,6 +9,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse, PlainTextResponse
 from google.protobuf.json_format import MessageToDict
 from langfuse import Langfuse
+import os
 from pydantic import BaseModel
 from utils import get_logger
 
@@ -23,13 +24,18 @@ class FeatureRequestModel(BaseModel):
 def create_app() -> FastAPI:
     app = FastAPI(title="ASGA Gateway", version="0.1.0")
     logger = get_logger(__name__)
-    Langfuse()
+    if os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY"):
+        Langfuse()
+    else:
+        logger.warning(
+            "Langfuse disabled: missing LANGFUSE_PUBLIC_KEY or LANGFUSE_SECRET_KEY"
+        )
 
     jobs: dict[str, asyncio.Queue] = {}
     finished_jobs: set[str] = set()
     app.state.jobs = jobs
     app.state.finished_jobs = finished_jobs
-
+  
     @app.post("/jobs")
     async def start_job(req: FeatureRequestModel):
         job_id = str(uuid4())

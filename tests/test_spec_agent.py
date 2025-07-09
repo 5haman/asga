@@ -4,6 +4,7 @@ import pytest
 from generated.contracts.v1 import contracts_pb2 as pb
 from nodes import spec_agent
 
+
 class DummyPredictor:
     def __init__(self, content: dict, tokens: int = 10):
         self.content = content
@@ -15,7 +16,9 @@ class DummyPredictor:
             method=self.content["method"],
             request_schema=json.dumps(self.content["request_schema"]),
             response_schema=json.dumps(self.content["response_schema"]),
-            _raw_output=SimpleNamespace(usage=SimpleNamespace(total_tokens=self.tokens)),
+            _raw_output=SimpleNamespace(
+                usage=SimpleNamespace(total_tokens=self.tokens)
+            ),
         )
 
 
@@ -74,3 +77,7 @@ def test_budget_exceeded(monkeypatch):
     monkeypatch.setattr(spec_agent, "_call_llm", fake_call)
     with pytest.raises(ValueError):
         spec_agent.spec_node({"feature_request": pb.FeatureRequest(user_story="demo")})
+
+
+def test_predictor_json_mode():
+    assert spec_agent.spec_predictor.get_config().get("output_format") == "json"
