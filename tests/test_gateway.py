@@ -3,6 +3,7 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 from gateway import create_app
 
+
 @pytest.fixture()
 def setup_app():
     app = create_app()
@@ -47,6 +48,9 @@ async def test_job_cleanup(setup_app):
                 pass
 
         assert job_id not in app.state.jobs
+
+        gone = await client.get(f"/jobs/{job_id}")
+        assert gone.status_code == 410
 
 
 @pytest.mark.asyncio
