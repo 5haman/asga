@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import json
+import time
 from typing import Dict, Any
+
+import openai
+import litellm
 
 from config import (
     OPENROUTER_MODEL,
@@ -72,24 +76,37 @@ spec_predictor = _simba.compile(
 
 
 def _call_llm(user_story: str) -> tuple[dict, int]:
-    try:
-        res = spec_predictor(user_story=user_story)
-        usage = getattr(res._raw_output, "usage", None)
-        tokens = getattr(usage, "total_tokens", 0) if usage else 0
-        return {
-            "endpoint": res.endpoint,
-            "method": res.method,
-            "request_schema": json.loads(res.request_schema or "{}"),
-            "response_schema": json.loads(res.response_schema or "{}"),
-        }, tokens
-    except Exception:
-        logger.exception("LLM spec extraction failed for user story: %s", user_story)
-        return {
-            "endpoint": "/demo",
-            "method": "GET",
-            "request_schema": {},
-            "response_schema": {},
-        }, 0
+    """Invoke the LLM with backoff and graceful degradation."""
+
+    for attempt in range(3):
+        try:
+            res = spec_predictor(user_story=user_story)
+            usage = getattr(res._raw_output, "usage", None)
+            tokens = getattr(usage, "total_tokens", 0) if usage else 0
+            return {
+                "endpoint": res.endpoint,
+                "method": res.method,
+                "request_schema": json.loads(res.request_schema or "{}"),
+                "response_schema": json.loads(res.response_schema or "{}"),
+            }, tokens
+        except (litellm.RateLimitError, openai.RateLimitError):
+            logger.warning("rate limited; retrying %d/3", attempt + 1)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("spec extraction failed (%s); retrying %d/3", type(exc).__name__, attempt + 1)
+        if attempt < 2:
+            time.sleep(2**attempt)
+
+    logger.warning(
+        "Model %s likely lacks response_format JSON support."
+        " Falling back to default spec; choose a compatible model.",
+        MODEL,
+    )
+    return {
+        "endpoint": "/demo",
+        "method": "GET",
+        "request_schema": {},
+        "response_schema": {},
+    }, 0
 
 
 logger = get_logger(__name__)
