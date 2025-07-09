@@ -1,7 +1,7 @@
 import hashlib
 import subprocess
 from pathlib import Path
-from generated.contracts.v1 import contracts_pb2 as pb
+from contracts import Spec
 from nodes import tests_agent as test_agent
 
 
@@ -11,7 +11,7 @@ def _write(code: str, path: Path) -> Path:
 
 
 def test_compilation(tmp_path):
-    spec = pb.Spec(
+    spec = Spec(
         endpoint="/demo", method="GET", request_schema="{}", response_schema="{}"
     )
     res = test_agent.test_node({"spec": spec})
@@ -24,7 +24,7 @@ def test_compilation(tmp_path):
 
 def test_determinism(monkeypatch):
     monkeypatch.setenv("OPENROUTER_SEED", "123")
-    spec = pb.Spec(
+    spec = Spec(
         endpoint="/demo", method="GET", request_schema="{}", response_schema="{}"
     )
     res1 = test_agent.test_node({"spec": spec})
@@ -35,7 +35,7 @@ def test_determinism(monkeypatch):
 
 
 def test_failure(tmp_path):
-    spec = pb.Spec(
+    spec = Spec(
         endpoint="/demo", method="GET", request_schema="{}", response_schema="{}"
     )
     res = test_agent.test_node({"spec": spec})

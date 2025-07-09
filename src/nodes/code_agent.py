@@ -5,12 +5,12 @@ from typing import Dict, Any
 
 from langfuse import observe
 from utils import get_logger
-from generated.contracts.v1 import contracts_pb2 as pb
+from contracts import Tests, Patch
 
 logger = get_logger(__name__)
 
 
-def _create_patch(tests: pb.Tests) -> str:  # type: ignore[name-defined]
+def _create_patch(tests: Tests) -> str:
     """Return unified diff turning failing tests into passing ones."""
     before = tests.code.splitlines(keepends=True)
     after_code = tests.code.replace("assert False", "assert True")
@@ -26,9 +26,9 @@ def _create_patch(tests: pb.Tests) -> str:  # type: ignore[name-defined]
 
 @observe()
 def code_node(state: Dict[str, Any]) -> Dict[str, Any]:
-    tests: pb.Tests = state["tests"]  # type: ignore[name-defined]
+    tests: Tests = state["tests"]
     logger.debug("code_node input has %d chars", len(tests.code))
     patch_text = _create_patch(tests)
-    result = {"patch": pb.Patch(diff=patch_text)}  # type: ignore[attr-defined]
+    result = {"patch": Patch(diff=patch_text)}
     logger.debug("code_node output diff len: %d", len(patch_text))
     return result

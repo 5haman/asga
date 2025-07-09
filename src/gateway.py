@@ -7,13 +7,13 @@ from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse, PlainTextResponse
-from google.protobuf.json_format import MessageToDict
+from dataclasses import asdict
 from langfuse import Langfuse
 import os
 from pydantic import BaseModel
 from utils import get_logger
 
-from generated.contracts.v1 import contracts_pb2 as pb
+from contracts import FeatureRequest, Spec, Tests, Patch, Critique, RepairPlan
 from graph import workflow
 
 
@@ -35,7 +35,7 @@ def create_app() -> FastAPI:
     finished_jobs: set[str] = set()
     app.state.jobs = jobs
     app.state.finished_jobs = finished_jobs
-  
+
     @app.post("/jobs")
     async def start_job(req: FeatureRequestModel):
         job_id = str(uuid4())
@@ -46,15 +46,15 @@ def create_app() -> FastAPI:
         loop = asyncio.get_running_loop()
 
         def _serialise(val):
-            if hasattr(val, "ListFields"):
-                return MessageToDict(val)
+            if hasattr(val, "__dataclass_fields__"):
+                return asdict(val)
             if isinstance(val, dict):
                 return {k: _serialise(v) for k, v in val.items()}
             return val  # pragma: no cover - simple passthrough
 
         def run():  # pragma: no cover - executed in thread
             for event in workflow.graph.stream(
-                {"feature_request": pb.FeatureRequest(user_story=req.user_story)}
+                {"feature_request": FeatureRequest(user_story=req.user_story)}
             ):
                 serialised = {k: _serialise(v) for k, v in event.items()}
                 logger.debug("event: %s", serialised)

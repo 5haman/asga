@@ -14,7 +14,7 @@ import dspy
 from dspy.teleprompt import SIMBA
 from dspy.primitives.example import Example
 from langfuse import observe
-from generated.contracts.v1 import contracts_pb2 as pb
+from contracts import FeatureRequest, Spec
 from utils import get_logger, validate_envelope
 
 
@@ -95,7 +95,7 @@ def _call_llm(user_story: str) -> tuple[dict, int]:
 logger = get_logger(__name__)
 
 
-def _validate_spec(spec: pb.Spec) -> None:  # type: ignore[name-defined]
+def _validate_spec(spec: Spec) -> None:
     envelope = {
         "context": {},
         "payload": {
@@ -111,13 +111,13 @@ def _validate_spec(spec: pb.Spec) -> None:  # type: ignore[name-defined]
 
 @observe()
 def spec_node(state: Dict[str, Any]) -> Dict[str, Any]:
-    feature: pb.FeatureRequest = state["feature_request"]  # type: ignore[name-defined]
+    feature: FeatureRequest = state["feature_request"]
     text = feature.user_story
     logger.debug("spec_node input: %s", text)
     if any(x in text.lower() for x in ["ignore previous", "system:"]):
         raise ValueError("possible prompt injection")
     data, tokens = _call_llm(text)
-    spec = pb.Spec(  # type: ignore[attr-defined]
+    spec = Spec(
         endpoint=data.get("endpoint", ""),
         method=data.get("method", ""),
         request_schema=json.dumps(data.get("request_schema", {})),

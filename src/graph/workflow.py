@@ -6,7 +6,14 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langfuse import observe
 from utils import get_logger
-from generated.contracts.v1 import contracts_pb2 as pb
+from contracts import (
+    FeatureRequest,
+    Spec,
+    Tests,
+    Patch,
+    Critique,
+    RepairPlan,
+)
 from nodes.spec_agent import spec_node
 from nodes.tests_agent import test_node
 from nodes.code_agent import code_node
@@ -16,12 +23,12 @@ logger = get_logger(__name__)
 
 
 class WorkflowState(TypedDict, total=False):
-    feature_request: pb.FeatureRequest  # type: ignore[name-defined]
-    spec: pb.Spec  # type: ignore[name-defined]
-    tests: pb.Tests  # type: ignore[name-defined]
-    patch: pb.Patch  # type: ignore[name-defined]
-    critique: pb.Critique  # type: ignore[name-defined]
-    repair_plan: pb.RepairPlan  # type: ignore[name-defined]
+    feature_request: FeatureRequest
+    spec: Spec
+    tests: Tests
+    patch: Patch
+    critique: Critique
+    repair_plan: RepairPlan
     attempts: int
 
 
@@ -33,7 +40,7 @@ def repair_node(state: WorkflowState) -> dict:
     attempt = state.get("attempts", 0) + 1
     logger.debug("repair_node attempt %d", attempt)
     result = {
-        "repair_plan": pb.RepairPlan(steps=[f"fix {attempt}"]),  # type: ignore[attr-defined]
+        "repair_plan": RepairPlan(steps=[f"fix {attempt}"]),
         "attempts": attempt,
     }
     logger.debug("repair_node output: %s", result)
