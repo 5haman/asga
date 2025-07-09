@@ -16,6 +16,15 @@
 	•	Hypothesis property-based test generator pattern  ￼.
 	•	Additional references on self-consistency reasoning, open-source guardrails, and recent security findings  
 
+## Quickstart
+
+```bash
+pip install -r requirements.txt
+export OPENROUTER_API_KEY=sk-...
+uvicorn src.agent:app --reload
+```
+
+
 ## 1 · Purpose
 
 Design an **autonomous agent system** that can ingest a high‑level feature request and produce production‑ready software artifacts—source code, tests, evaluation reports, and deployment manifests—while continuously validating itself with *self‑review* and *LLM‑as‑judge* loops. The goal is to cut cycle time from idea to mergeable pull‑request to **\< 10 minutes** in CI.
