@@ -4,6 +4,9 @@ import difflib
 from typing import Dict, Any
 
 from langfuse import observe
+from utils import get_logger
+
+logger = get_logger(__name__)
 
 from generated.contracts.v1 import contracts_pb2 as pb
 
@@ -27,5 +30,8 @@ def _create_patch(tests: pb.Tests) -> str:  # type: ignore[name-defined]
 @observe()
 def code_node(state: Dict[str, Any]) -> Dict[str, Any]:
     tests: pb.Tests = state["tests"]  # type: ignore[name-defined]
+    logger.debug("code_node input has %d chars", len(tests.code))
     patch_text = _create_patch(tests)
-    return {"patch": pb.Patch(diff=patch_text)}  # type: ignore[attr-defined]
+    result = {"patch": pb.Patch(diff=patch_text)}  # type: ignore[attr-defined]
+    logger.debug("code_node output diff len: %d", len(patch_text))
+    return result

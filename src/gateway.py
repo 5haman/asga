@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse, PlainTextResponse
 from google.protobuf.json_format import MessageToDict
 from langfuse import Langfuse
 from pydantic import BaseModel
+from utils import get_logger
 
 from generated.contracts.v1 import contracts_pb2 as pb
 from graph import workflow
@@ -21,6 +22,7 @@ class FeatureRequestModel(BaseModel):
 
 def create_app() -> FastAPI:
     app = FastAPI(title="ASGA Gateway", version="0.1.0")
+    logger = get_logger(__name__)
     Langfuse()
 
     jobs: dict[str, asyncio.Queue] = {}
@@ -31,6 +33,7 @@ def create_app() -> FastAPI:
     @app.post("/jobs")
     async def start_job(req: FeatureRequestModel):
         job_id = str(uuid4())
+        logger.debug("start_job %s", job_id)
         queue: asyncio.Queue = asyncio.Queue()
         jobs[job_id] = queue
         loop = asyncio.get_running_loop()
@@ -47,6 +50,7 @@ def create_app() -> FastAPI:
                 {"feature_request": pb.FeatureRequest(user_story=req.user_story)}
             ):
                 serialised = {k: _serialise(v) for k, v in event.items()}
+                logger.debug("event: %s", serialised)
                 asyncio.run_coroutine_threadsafe(queue.put(serialised), loop)
             asyncio.run_coroutine_threadsafe(queue.put(None), loop)
 
@@ -65,6 +69,7 @@ def create_app() -> FastAPI:
                     event = await queue.get()
                     if event is None:
                         break
+                    logger.debug("sse event: %s", event)
                     yield f"data: {json.dumps(event)}\n\n"
             finally:
                 jobs.pop(job_id, None)
