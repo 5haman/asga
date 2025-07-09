@@ -81,6 +81,7 @@ def _call_llm(user_story: str) -> tuple[dict, int]:
             "response_schema": json.loads(res.response_schema or "{}"),
         }, tokens
     except Exception:
+        logger.exception("LLM spec extraction failed for user story: %s", user_story)
         return {
             "endpoint": "/demo",
             "method": "GET",
