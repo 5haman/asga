@@ -4,6 +4,7 @@ import pytest
 from contracts import FeatureRequest
 from nodes import spec_agent
 
+
 class DummyPredictor:
     def __init__(self, content: dict, tokens: int = 10):
         self.content = content
@@ -15,7 +16,9 @@ class DummyPredictor:
             method=self.content["method"],
             request_schema=json.dumps(self.content["request_schema"]),
             response_schema=json.dumps(self.content["response_schema"]),
-            _raw_output=SimpleNamespace(usage=SimpleNamespace(total_tokens=self.tokens)),
+            _raw_output=SimpleNamespace(
+                usage=SimpleNamespace(total_tokens=self.tokens)
+            ),
         )
 
 

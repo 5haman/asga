@@ -18,5 +18,7 @@ def validate_envelope(data: dict, schema_name: str) -> None:
     schema_path = Path("schemas/mcp") / f"{schema_name}.json"
     schema = json.loads(schema_path.read_text())
     base = schema_path.parent.resolve().as_uri() + "/"
-    validator = Draft7Validator(schema, resolver=RefResolver(base_uri=base, referrer=schema))
+    validator = Draft7Validator(
+        schema, resolver=RefResolver(base_uri=base, referrer=schema)
+    )
     validator.validate(data)
