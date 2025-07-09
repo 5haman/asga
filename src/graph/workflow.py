@@ -17,6 +17,21 @@ from nodes.critic_agent import critic_node
 tracer: Tracer = trace.get_tracer(__name__)  # type: ignore[attr-defined]
 
 
+@observe()
+def optimise_simba(state: WorkflowState) -> dict:
+    """SIMBA optimisation loop triggered on failed critique."""
+    with tracer.start_as_current_span("optimise_simba"):
+        attempt = state.get("attempts", 0) + 1
+        return {
+            "repair_plan": pb.RepairPlan(steps=[f"fix {attempt}"]),  # type: ignore[attr-defined]
+            "attempts": attempt,
+        }
+
+
+# Backwards compatibility name
+repair_node = optimise_simba
+
+
 class WorkflowState(TypedDict, total=False):
     feature_request: pb.FeatureRequest  # type: ignore[name-defined]
     spec: pb.Spec  # type: ignore[name-defined]
@@ -30,26 +45,16 @@ class WorkflowState(TypedDict, total=False):
 # --- Node implementations -------------------------------------------------
 
 
-@observe()
-def repair_node(state: WorkflowState) -> dict:
-    with tracer.start_as_current_span("repair_agent"):
-        attempt = state.get("attempts", 0) + 1
-        return {
-            "repair_plan": pb.RepairPlan(steps=[f"fix {attempt}"]),  # type: ignore[attr-defined]
-            "attempts": attempt,
-        }
-
-
 # --- Routers ---------------------------------------------------------------
 
 
 def route_after_critic(state: WorkflowState):
     if state["critique"].score >= 0.8:
         return END
-    return "repair"
+    return "optimise"
 
 
-def route_after_repair(state: WorkflowState):
+def route_after_optimise(state: WorkflowState):
     if state.get("attempts", 0) >= 3:
         return END
     return "code"
@@ -64,7 +69,7 @@ def create_graph() -> CompiledStateGraph:
     builder.add_node("tests", test_node)  # type: ignore[arg-type,call-overload]
     builder.add_node("code", code_node)  # type: ignore[arg-type,call-overload]
     builder.add_node("critic", critic_node)  # type: ignore[arg-type,call-overload]
-    builder.add_node("repair", repair_node)  # type: ignore[arg-type,call-overload]
+    builder.add_node("optimise", optimise_simba)  # type: ignore[arg-type,call-overload]
 
     builder.add_edge(START, "spec")
     builder.add_edge("spec", "tests")
@@ -72,7 +77,7 @@ def create_graph() -> CompiledStateGraph:
     builder.add_edge("code", "critic")
 
     builder.add_conditional_edges("critic", route_after_critic)
-    builder.add_conditional_edges("repair", route_after_repair)
+    builder.add_conditional_edges("optimise", route_after_optimise)
 
     return builder.compile()
 
